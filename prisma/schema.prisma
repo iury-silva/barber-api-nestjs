@@ -1,0 +1,65 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique @db.VarChar(30)
+  name      String     @db.VarChar(50)
+  password  String
+  user_type String     @default("user") @db.VarChar(20)
+  createdAt DateTime   @default(dbgenerated("now()"))
+  Schedule  Schedule[]
+
+  @@map("users")
+}
+
+model Barber {
+  id        String     @id @default(uuid())
+  name      String     @db.VarChar(50)
+  email     String     @unique @db.VarChar(30)
+  password  String
+  user_type String     @default("barber") @db.VarChar(20)
+  createdAt DateTime   @default(dbgenerated("now()"))
+  Schedule  Schedule[]
+  Service   Service[]
+
+  @@map("barbers")
+}
+
+model Schedule {
+  id          String   @id @default(uuid())
+  bookingDate DateTime @db.Date
+  status      String   @default("reservado") @db.VarChar(20)
+  createdAt   DateTime @default(dbgenerated("now()"))
+  userId      String
+  barberId    String   @map("barberId")
+  serviceId   String
+
+  //relationship
+  user    User    @relation(fields: [userId], references: [id])
+  barber  Barber  @relation(fields: [barberId], references: [id])
+  service Service @relation(fields: [serviceId], references: [id])
+
+  @@map("schedules")
+}
+
+model Service {
+  id        String     @id @default(uuid())
+  name      String     @db.VarChar(50)
+  price     Float
+  createdAt DateTime   @default(dbgenerated("now()"))
+  Schedule  Schedule[]
+  barberId  String     @map("barberId")
+  barber    Barber     @relation(fields: [barberId], references: [id])
+
+  @@map("services")
+}
